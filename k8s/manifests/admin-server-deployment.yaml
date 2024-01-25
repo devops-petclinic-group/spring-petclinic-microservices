@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: admin
+  labels:
+    app: admin-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: admin-server
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: admin-server
+    spec:
+      containers:
+        - image: springcommunity/spring-petclinic-admin-server
+          name: admin-server
+          ports:
+            - containerPort: 9090
+              hostPort: 9090
+              protocol: TCP
+          resources:
+            limits:
+              memory: "536870912"
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              valueFrom:
+                configMapKeyRef:
+                  name: mysql-config
+                  key: SPRING_PROFILES_ACTIVE
+      restartPolicy: Always
+status: {}
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: admin-server
+  name: admin-server
+spec:
+  ports:
+    - name: "9090"
+      port: 9090
+      targetPort: 9090
+  selector:
+    app: admin-server
+status:
+  loadBalancer: {}
+
+
+---
+
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+ name: hpa-admin
+ namespace: default
+spec:
+ scaleTargetRef:
+   apiVersion: apps/v1
+   kind: Deployment
+   name: admin-server
+ minReplicas: 1
+ maxReplicas: 5
+ targetCPUUtilizationPercentage: 80

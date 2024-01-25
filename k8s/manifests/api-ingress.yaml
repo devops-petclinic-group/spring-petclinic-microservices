@@ -1,0 +1,92 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: https-redirect
+spec:
+  redirectScheme:
+    scheme: https
+    permanent: true
+
+---   
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: api-ingress-secure
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - match: Host(`petclinic.zz.cloudns.ph`)
+    kind: Rule
+    services:
+      - name: api-gateway
+        port: 8080
+  tls:
+    secretName: letsencrypt-secret
+
+---   
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: api-ingress
+spec:
+  entryPoints:
+    - web
+  routes:
+  - match: Host(`petclinic.zz.cloudns.ph`)
+    kind: Rule
+    services:
+      - name: api-gateway
+        port: 8080
+    middlewares:
+      - name: https-redirect
+
+
+# apiVersion: networking.k8s.io/v1
+# kind: Ingress
+# metadata:
+#   name: api-ingress
+#   annotations:
+#     #traefik.ingress.kubernetes.io/router.middlewares: default-redirect-https@kubernetescrd
+#     cert-manager.io/cluster-issuer: letsencrypt-prod
+#     #traefik.ingress.kubernetes.io/router.entrypoints: websecure
+# spec:
+#   ingressClassName: traefik
+#   tls:
+#     - secretName: letsencrypt-secret
+#       hosts:
+#         - petclinic.zz.cloudns.ph
+#   rules:
+#   - host: petclinic.zz.cloudns.ph
+#     http:
+#       paths:
+#         - path: /
+#           pathType: Prefix
+#           backend:
+#             service:
+#               name: api-gateway
+#               port:
+#                 number: 8080
+
+
+        # - path: /api/customer/
+        #   pathType: Prefix
+        #   backend:
+        #     service:
+        #       name: customers-service
+        #       port: 
+        #         number: 8081
+        # - path: /api/visit/
+        #   pathType: Prefix
+        #   backend:
+        #     service:
+        #       name: visits-service
+        #       port: 
+        #         number: 8082
+        # - path: /api/vet/
+        #   pathType: Prefix
+        #   backend:
+        #     service:
+        #       name: vets-service
+        #       port: 
+        #         number: 8083
