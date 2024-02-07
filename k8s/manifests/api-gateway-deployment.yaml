@@ -16,15 +16,16 @@ spec:
         app: api-gateway
     spec:
       containers:
-        - image: springcommunity/spring-petclinic-api-gateway
+        - image: zzouhal/spring-petclinic-cloud-api-gateway
           name: api-gateway
           ports:
             - containerPort: 8080
-              hostPort: 8080
+              #hostPort: 8080
               protocol: TCP
           resources:
-            limits:
-              memory: "536870912"
+            requests:
+              memory: "64Mi"
+              cpu: "250m"
           env:
             - name: SPRING_PROFILES_ACTIVE
               valueFrom:

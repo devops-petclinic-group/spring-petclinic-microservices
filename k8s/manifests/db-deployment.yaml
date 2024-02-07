@@ -41,10 +41,14 @@ metadata:
   name: mysql-config
 data:
   SPRING_PROFILES_ACTIVE: "docker,mysql"
-  MYSQL_HOST: "mysql-petclinic"
+  MYSQL_VETS_HOST: "mysql-vets-petclinic"
+  MYSQL_VISITS_HOST: "mysql-visits-petclinic"
+  MYSQL_CUSTOMERS_HOST: "mysql-customers-petclinic"
   MYSQL_PORT: "3306"
   MYSQL_USERNAME: "root"
-  MYSQL_DATABASE: "petclinic"
+  MYSQL_VETS_DATABASE: "petclinic-vets"
+  MYSQL_VISITS_DATABASE: "petclinic-visits"
+  MYSQL_CUSTOMERS_DATABASE: "petclinic-customers"
 
 
 ---
@@ -52,20 +56,20 @@ data:
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: mysql-petclinic
+  name: mysql-vets-petclinic
 spec:
-  serviceName: "mysql-service"
+  serviceName: "mysql-vets-service"
   replicas: 1
   selector:
     matchLabels:
-      app: mysql-petclinic
+      app: mysql-vets-petclinic
   template:
     metadata:
       labels:
-        app: mysql-petclinic
+        app: mysql-vets-petclinic
     spec:
       containers:
-      - name: mysql
+      - name: mysql-vets
         image: mysql:latest
         env:
         - name: MYSQL_ROOT_PASSWORD
@@ -73,14 +77,100 @@ spec:
             secretKeyRef:
               name: mysql-secret
               key: MYSQL_ROOT_PASSWORD
-        - name: MYSQL_DATABASE
+        - name: MYSQL_VETS_DATABASE
           valueFrom:
             configMapKeyRef:
               name: mysql-config
-              key: MYSQL_DATABASE
+              key: MYSQL_VETS_DATABASE
         ports:
         - containerPort: 3306
-          name: mysql
+          name: mysql-vets
+        volumeMounts:
+        - name: mysql-petclinic-data
+          mountPath: /var/lib/mysql
+
+      volumes:
+      - name: mysql-petclinic-data
+        persistentVolumeClaim:
+          claimName: mysql-pvc
+
+---
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mysql-visits-petclinic
+spec:
+  serviceName: "mysql-visits-service"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql-visits-petclinic
+  template:
+    metadata:
+      labels:
+        app: mysql-visits-petclinic
+    spec:
+      containers:
+      - name: mysql-visits
+        image: mysql:latest
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: MYSQL_ROOT_PASSWORD
+        - name: MYSQL_VISITS_DATABASE
+          valueFrom:
+            configMapKeyRef:
+              name: mysql-config
+              key: MYSQL_VISITS_DATABASE
+        ports:
+        - containerPort: 3306
+          name: mysql-visits
+        volumeMounts:
+        - name: mysql-petclinic-data
+          mountPath: /var/lib/mysql
+
+      volumes:
+      - name: mysql-petclinic-data
+        persistentVolumeClaim:
+          claimName: mysql-pvc
+
+---
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mysql-customers-petclinic
+spec:
+  serviceName: "mysql-customers-service"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql-customers-petclinic
+  template:
+    metadata:
+      labels:
+        app: mysql-customers-petclinic
+    spec:
+      containers:
+      - name: mysql-customers
+        image: mysql:latest
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: MYSQL_ROOT_PASSWORD
+        - name: MYSQL_CUSTOMERS_DATABASE
+          valueFrom:
+            configMapKeyRef:
+              name: mysql-config
+              key: MYSQL_CUSTOMERS_DATABASE
+        ports:
+        - containerPort: 3306
+          name: mysql-customers
         volumeMounts:
         - name: mysql-petclinic-data
           mountPath: /var/lib/mysql
@@ -95,11 +185,37 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: mysql-service
+  name: mysql-vets-service
 spec:
   selector:
-    app: mysql-petclinic
+    app: mysql-vets-petclinic
   ports:
-  - name: mysql
+  - name: mysql-vets
+    port: 3306
+    targetPort: 3306
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-visits-service
+spec:
+  selector:
+    app: mysql-visits-petclinic
+  ports:
+  - name: mysql-visits
+    port: 3306
+    targetPort: 3306
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-customers-service
+spec:
+  selector:
+    app: mysql-customers-petclinic
+  ports:
+  - name: mysql-customers
     port: 3306
     targetPort: 3306

@@ -16,15 +16,16 @@ spec:
         app: vets-service
     spec:
       containers:
-        - image: springcommunity/spring-petclinic-vets-service
+        - image: zzouhal/spring-petclinic-cloud-vets-service
           name: vets-service
           ports:
             - containerPort: 8083
-              hostPort: 8083
+              #hostPort: 8083
               protocol: TCP
           resources:
-            limits:
-              memory: "536870912"
+            requests:
+              memory: "64Mi"
+              cpu: "250m"
           env:
             - name: MYSQL_ROOT_PASSWORD
               valueFrom:
@@ -36,11 +37,11 @@ spec:
                 configMapKeyRef:
                   name: mysql-config
                   key: SPRING_PROFILES_ACTIVE
-            - name: MYSQL_HOST
+            - name: MYSQL_VETS_HOST
               valueFrom:
                 configMapKeyRef:
                   name: mysql-config
-                  key: MYSQL_HOST
+                  key: MYSQL_VETS_HOST
             - name: MYSQL_PORT
               valueFrom:
                 configMapKeyRef:
@@ -51,11 +52,11 @@ spec:
                 configMapKeyRef:
                   name: mysql-config
                   key: MYSQL_USERNAME
-            - name: MYSQL_DATABASE
+            - name: MYSQL_VETS_DATABASE
               valueFrom:
                 configMapKeyRef:
                   name: mysql-config
-                  key: MYSQL_DATABASE
+                  key: MYSQL_VETS_DATABASE
       restartPolicy: Always
 status: {}
 
